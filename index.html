@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Calorias</title>
+  <style>
+    :root {
+      --fundo: #121212;
+      --box: #1c1c1c;
+      --verde: #00c896;
+      --verde-claro: #7cffcb;
+      --texto: #e5e5e5;
+      --sombra: rgba(0, 200, 150, 0.2);
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--fundo);
+      color: var(--texto);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    h1, h2 {
+      color: var(--verde);
+      text-align: center;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    form, .meta-box, .refeicoes-box, #resultado, #progresso {
+      background: var(--box);
+      padding: 20px;
+      border-radius: 16px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 4px 15px var(--sombra);
+      margin-top: 20px;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    form:hover, .meta-box:hover, .refeicoes-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px var(--sombra);
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 500;
+      color: var(--verde-claro);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      background: #111;
+      border: 1.5px solid var(--verde);
+      border-radius: 10px;
+      color: var(--texto);
+      outline: none;
+      transition: 0.3s;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--verde-claro);
+      box-shadow: 0 0 8px var(--verde);
+    }
+
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--verde), var(--verde-claro));
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 10px var(--verde);
+    }
+
+    progress {
+      width: 100%;
+      height: 22px;
+      border-radius: 10px;
+      overflow: hidden;
+      appearance: none;
+    }
+
+    progress::-webkit-progress-bar {
+      background-color: #222;
+      border-radius: 10px;
+    }
+
+    progress::-webkit-progress-value {
+      background: linear-gradient(90deg, var(--verde), var(--verde-claro));
+      border-radius: 10px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    li {
+      background: #181818;
+      margin-bottom: 5px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      border-left: 3px solid var(--verde);
+    }
+
+    #caloriasTexto b {
+      color: var(--verde-claro);
+    }
+  </style>
+</head>
+<body>
+  <h1> Calculadora de Calorias</h1>
+
+  <form id="formCalc">
+    <label>Sexo:</label>
+    <select id="sexo" required>
+      <option value="masculino">Masculino</option>
+      <option value="feminino">Feminino</option>
+    </select>
+
+    <label>Peso (kg):</label>
+    <input type="number" id="peso" required>
+
+    <label>Altura (cm):</label>
+    <input type="number" id="altura" required>
+
+    <label>Idade:</label>
+    <input type="number" id="idade" required>
+
+    <label>Nível de atividade:</label>
+    <select id="atividade" required>
+      <option value="1.2">Sedentário</option>
+      <option value="1.375">Levemente ativo</option>
+      <option value="1.55">Moderadamente ativo</option>
+      <option value="1.725">Muito ativo</option>
+      <option value="1.9">Extremamente ativo</option>
+    </select>
+
+    <button type="submit">Calcular</button>
+  </form>
+
+  <div id="resultado"></div>
+
+  <div class="meta-box">
+    <h2> Meta diária</h2>
+    <label>Meta de calorias (kcal):</label>
+    <input type="number" id="metaInput" placeholder="ex: 2200">
+    <button id="definirMeta">Definir meta</button>
+  </div>
+
+  <div class="refeicoes-box">
+    <h2> Adicionar refeição</h2>
+    <label>Descrição:</label>
+    <input type="text" id="descRefeicao" placeholder="ex: Almoço com frango e arroz">
+    <label>Calorias (kcal):</label>
+    <input type="number" id="kcalRefeicao" placeholder="ex: 650">
+    <button id="addRefeicao">Adicionar</button>
+  </div>
+
+  <div id="progresso" style="display:none;">
+    <h2> Progresso de hoje</h2>
+    <p id="caloriasTexto"></p>
+    <progress id="barra" value="0" max="100"></progress>
+    <ul id="listaRefeicoes"></ul>
+  </div>
+
+  <script>
+    // === Cálculo calórico ===
+    document.getElementById('formCalc').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const sexo = document.getElementById('sexo').value;
+      const peso = parseFloat(document.getElementById('peso').value);
+      const altura = parseFloat(document.getElementById('altura').value);
+      const idade = parseInt(document.getElementById('idade').value);
+      const atividade = parseFloat(document.getElementById('atividade').value);
+
+      let bmr;
+      if (sexo === 'masculino') {
+        bmr = 10 * peso + 6.25 * altura - 5 * idade + 5;
+      } else {
+        bmr = 10 * peso + 6.25 * altura - 5 * idade - 161;
+      }
+
+      const tdee = bmr * atividade;
+      const perder = tdee * 0.85;
+      const ganhar = tdee * 1.15;
+
+      document.getElementById('resultado').innerHTML = `
+        <h3>Resultados:</h3>
+        <p> Manter peso: <b>${tdee.toFixed(0)} kcal</b></p>
+        <p> Perder peso: <b>${perder.toFixed(0)} kcal</b></p>
+        <p> Ganhar peso: <b>${ganhar.toFixed(0)} kcal</b></p>
+      `;
+    });
+
+    // === Meta e progresso ===
+    let meta = 0;
+    let consumido = 0;
+
+    document.getElementById('definirMeta').addEventListener('click', () => {
+      meta = parseFloat(document.getElementById('metaInput').value);
+      if (!meta || meta <= 0) {
+        alert("Informe uma meta válida!");
+        return;
+      }
+      consumido = 0;
+      atualizarProgresso();
+      document.getElementById('progresso').style.display = 'block';
+      document.getElementById('listaRefeicoes').innerHTML = '';
+    });
+
+    document.getElementById('addRefeicao').addEventListener('click', () => {
+      if (!meta) {
+        alert("Defina uma meta primeiro!");
+        return;
+      }
+
+      const desc = document.getElementById('descRefeicao').value.trim();
+      const kcal = parseFloat(document.getElementById('kcalRefeicao').value);
+      if (!desc || !kcal) {
+        alert("Preencha os campos da refeição!");
+        return;
+      }
+
+      consumido += kcal;
+      const lista = document.getElementById('listaRefeicoes');
+      const item = document.createElement('li');
+      item.textContent = `${desc}: ${kcal} kcal`;
+      lista.appendChild(item);
+
+      atualizarProgresso();
+
+      document.getElementById('descRefeicao').value = "";
+      document.getElementById('kcalRefeicao').value = "";
+    });
+
+    function atualizarProgresso() {
+      const resto = meta - consumido;
+      const porcentagem = Math.min((consumido / meta) * 100, 100);
+      document.getElementById('barra').value = porcentagem;
+      document.getElementById('caloriasTexto').innerHTML = `
+        <b>${consumido.toFixed(0)} kcal</b> consumidas de <b>${meta.toFixed(0)} kcal</b><br>
+        Restam: <b>${Math.max(resto, 0).toFixed(0)} kcal</b>
+      `;
+    }
+  </script>
+</body>
+</html>
